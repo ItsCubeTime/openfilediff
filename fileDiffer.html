@@ -115,10 +115,10 @@
             
 Example usage:</p>
 <p class="largeCodeblock"><span class="codeLightBlue">b1</span>=<span class="codeDarkBlue">b</span><span class="codeBrown">"1234567890987654321abcdefghijklmnopqrstuvwxyz"</span>
-    <span class="codeLightBlue">b2</span>=<span class="codeDarkBlue">b</span><span class="codeBrown">"1234567890987654321abcdefghijmeownopqrstuvwxyz" # Same as b1, except 'kl' got replaced with 'meow'</span>
-    <span class="codeLightBlue">diff</span>=<span class="codeYellow"></span><span class="codeYellow">getDiff</span>(<span class="codeLightBlue">b1</span>,<span class="codeLightBlue">b2</span>)
-    <span class="codeBlue">B2</span>=<span class="codeYellow">applyDiff</span>(<span class="codeLightBlue">b1</span>,<span class="codeLightBlue">diff</span>)
-    <span class="codeYellow">print</span>(<span class="codeLightBlue">diff</span>)     <span class="codeDarkGreen"># Would print: bytearray(b'\x1d- -\x00-\x04-,\x01-,\x01---meow') or bytearray(b'29-32-0-4---meow') if you use humanly readable numbers (there are 2 commented out functions 'intToBytes' & 'bytesToInt' that if you uncomment, getDiff/applyDiff will start using humanly readable numbers instead - however, doing so would also increase the diff file's size somewhat)
+<span class="codeLightBlue">b2</span>=<span class="codeDarkBlue">b</span><span class="codeBrown">"1234567890987654321abcdefghijmeownopqrstuvwxyz" # Same as b1, except 'kl' got replaced with 'meow'</span>
+<span class="codeLightBlue">diff</span>=<span class="codeYellow"></span><span class="codeYellow">getDiff</span>(<span class="codeLightBlue">b1</span>,<span class="codeLightBlue">b2</span>)
+<span class="codeBlue">B2</span>=<span class="codeYellow">applyDiff</span>(<span class="codeLightBlue">b1</span>,<span class="codeLightBlue">diff</span>)
+<span class="codeYellow">print</span>(<span class="codeLightBlue">diff</span>)     <span class="codeDarkGreen"># Would print: bytearray(b'\x1d- -\x00-\x04-,\x01-,\x01---meow') or bytearray(b'29-32-0-4---meow') if you use humanly readable numbers (there are 2 commented out functions 'intToBytes' & 'bytesToInt' that if you uncomment, getDiff/applyDiff will start using humanly readable numbers instead - however, doing so would also increase the diff file's size somewhat)
 # The numbers represent which indices we want to replace with what indices of the string that comes after the triple dashes ('---') right before, in our example, 'meow'.
 
 # So in our example We take the characters in the first string b1, replace characters between the indices 29 and 32 (that is, the characters on indices 29, 30 & 31 which are 'klm') with the characters coming after in the diff at indices 0 to 4 (0,1,2,3 but not 4) counting from the first character after the triple-dashes ('---'), which are 'meow'.</span>
