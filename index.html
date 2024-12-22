@@ -6,6 +6,67 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.13.0/brython.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.13.0/brython_stdlib.js"></script>
     <style>
+.lds-ellipsis,
+.lds-ellipsis div {
+  box-sizing: border-box;
+}
+.lds-ellipsis {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-ellipsis div {
+  position: absolute;
+  top: 33.33333px;
+  width: 13.33333px;
+  height: 13.33333px;
+  border-radius: 50%;
+  background: currentColor;
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.lds-ellipsis div:nth-child(1) {
+  left: 8px;
+  animation: lds-ellipsis1 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(2) {
+  left: 8px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(3) {
+  left: 32px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(4) {
+  left: 56px;
+  animation: lds-ellipsis3 0.6s infinite;
+}
+@keyframes lds-ellipsis1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes lds-ellipsis3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes lds-ellipsis2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(24px, 0);
+  }
+}        
+    </style>
+    <style>
         :root {
             --main-color: rgb(32, 23, 23); /*rgb(32, 25, 25);*/
             --svg-color: rgb(141, 71, 71); /*rgb(32, 25, 25);*/
@@ -125,9 +186,23 @@ Since the indices of .openfilediff arent guaranteed to be counting upwards (alth
         
 Go ahead, try it! Simply drop in a file - then a similar but slightly modified file and it will create a </p><p class="codeblock">.openfilediff</p><p class="regular"> version of the modified file. You can repeat by dragging the first file you dragged in once again, but then uploading the </p><p class="codeblock">.openfilediff</p><p class="regular"> as the second file. You should then get back the second file you uploaded the first time.</p>
     <div id="drop_zone" style="background-color: rgba(255, 0, 0, 0.048); display:flex; align-items: center; justify-content: center; flex-direction: column; width: auto; height: 200px; border: 2px dashed #b9b9b9; text-align: center;">
+        <!-- <svg preserveAspectRatio="xMinYMin" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 560 1388">
+            <defs>
+              <mask id="canTopMask">
+                <image width="560" height="1388" xlink:href="https://i.imgur.com/OX7vtdl.gif" />
+              </mask>
+            </defs>
+            <image mask="url(#canTopMask)" id="canTop" width="560" height="1388" xlink:href="https://imgur.com/a/qxQZVKZ" />
+          </svg> -->
+          <div id="loading_icon" style="transform:translate(0px,-60px) scale(0.5); scale:0;position:absolute; color:var(--main-color);">
+              <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+          </div>
+        <!-- <image src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif"></image> -->
         <p class="regular" style="height:fit-content;width:fit-content;">Drop file here or click to select</p>
-        <p class="codeblock" style="scale:0;height:fit-content;width:auto;" id="uploaded_file"></p>
-        <p class="regular" style=  "scale:0;height:fit-content;width:auto;" id="hint_text"></p>
+        <p class="codeblock" style="margin: 5px; scale:0;height:fit-content;width:auto;" id="uploaded_file"></p>
+        <div style="width:60%">
+            <p class="regular" style=  "margin: 5px; scale:1;height:fit-content;width:auto; text-align: center;" id="hint_text"></p>
+        </div>
     </div>
     <input type="file" id="file_input" style="display: none;">
 <p class="regular">
@@ -369,7 +444,7 @@ Todo:
 
 
 
-        from browser import document, window, html
+        from browser import document, window, html, timer 
         hasReceivedDiffFile=False
         hasReceivedFile1=False
         hasReceivedFile2=False
@@ -377,13 +452,21 @@ Todo:
         file1=None
         file2=None
         file2name=None
+        event=None
         # print(f"hi: {bytes(window.Uint8Array.new([104, 101, 108, 108, 111]))}")
         def handle_file(event):
             event.preventDefault()  # Prevent default behavior
-            file = event.target.files[0] if event.target.files else event.dataTransfer.files[0]
+            file = event.target.files[0] if hasattr(event.target,'files') else event.dataTransfer.files[0]
             reader = window.FileReader.new()
-            
-            def onload(event):
+            def onload(event_):
+                document["loading_icon"].style.scale=1
+                global event
+                event=event_
+                timer.set_timeout(onloadAsync, 1)
+                #aio.run(onloadAsync())
+            def onloadAsync():
+                #await aio.sleep(0.01)
+                global event
                 global hasReceivedDiffFile
                 global hasReceivedFile1
                 global hasReceivedFile2
@@ -425,17 +508,23 @@ Todo:
                     r.set(window.Uint8Array.new([b for b in bytes1]))
                     return r
                 if hasReceivedDiffFile and hasReceivedFile1:
+                    #document["loading_icon"].style.scale=1
+                    #aio.sleep(0.01)
                     print(f"applyDiff({file1},{diffFile})")
                     newDataBytes=applyDiff(file1,diffFile)
                     print(f"-> {newDataBytes}")
                     new_data=createArrayBuffer(newDataBytes)
                     shouldCreateNewFile=True
+                    #document["loading_icon"].style.scale=0
                 elif hasReceivedFile2 and hasReceivedFile1:
+                    #document["loading_icon"].style.scale=1
+                    #aio.sleep(0.01)
                     print(f"getDiff({file1},{file2})")
                     newDataBytes=getDiff(file1,file2)
                     print(f"-> {newDataBytes}")
                     new_data=createArrayBuffer(newDataBytes)
                     shouldCreateNewFile=True
+                    #document["loading_icon"].style.scale=0
                 elif hasReceivedFile1 and not (hasReceivedDiffFile or hasReceivedFile2):
                     document["uploaded_file"].text = '📄'+fileName
                     document["hint_text"].text = "Received the first file. Now, upload either a '.openfilediff' file or a second file you would like to use to create a '.openfilediff' file with"
@@ -445,6 +534,7 @@ Todo:
                     document["hint_text"].text = "Received a '.openfilediff'. Upload the first file that was used to create the diff file (that is, the files without modifications)"
                     document["uploaded_file"].style.scale=1
                 if not shouldCreateNewFile:
+                    document["loading_icon"].style.scale=0
                     return
                 new_file_name = file2name
                 if hasReceivedDiffFile:
@@ -463,6 +553,7 @@ Todo:
                 document["uploaded_file"].text =""
                 document["uploaded_file"].style.scale=0
                 document["hint_text"].text =""
+                document["loading_icon"].style.scale=0
             
             reader.bind("load", onload)
             reader.readAsArrayBuffer(file)
